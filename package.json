@@ -1,6 +1,6 @@
 {
   "name": "bb-component-SuperFilter",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A Filtering Component for Budibase",
   "license": "MIT",
   "svelte": "index.js",

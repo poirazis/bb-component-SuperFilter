@@ -72,39 +72,41 @@
 </script>
 
 <div use:styleable={$component.styles}>
+  {#key limit}
+    {#if !valid}
+      <p> Unsupported Column Type </p>
+    {/if}
 
-  {#if !valid}
-    <p> Unsupported Column Type </p>
-  {/if}
-
-  {#if isOptions}
-    <ActionGroup>
-      <ActionButton selected={ !value } on:click={ () => { value = null } }> ALL </ActionButton>
-      {#each fieldSchema.constraints.inclusion as option}
-        <ActionButton
-          selected={option == value}
-          emphasized
-          on:click={ () => { value = option } }
-          > 
-          {option} 
-        </ActionButton>
-      {/each}
-    </ActionGroup>
-  {/if}
-  
-  {#if isRelationship && results?.rows }
-    <ActionGroup>
-      <ActionButton selected={ !value } on:click={ () => { value = null } }> ALL </ActionButton>
-      {#each results?.rows as option}
-        <ActionButton
-          selected={option[fieldSchema.fieldName] == value}
-          emphasized 
-          on:click={ () => { value = option[fieldSchema.fieldName] } }
-          > 
-          {option[primaryDisplay]} 
-        </ActionButton>
-      {/each}
-      </ActionGroup>
-  {/if}
-
+    {#if isOptions}
+        <ActionGroup>
+          <ActionButton selected={ !value } on:click={ () => { value = null } }> ALL </ActionButton>
+          {#each fieldSchema.constraints.inclusion as option, idx}
+            {#if idx < limit}
+              <ActionButton
+                selected={option == value}
+                emphasized
+                on:click={ () => { value = option } }
+                > 
+                {option} 
+              </ActionButton>
+            {/if}
+          {/each}
+        </ActionGroup>
+    {/if}
+    
+    {#if isRelationship && results?.rows }
+      <ActionGroup>
+        <ActionButton selected={ !value } on:click={ () => { value = null } }> ALL </ActionButton>
+        {#each results?.rows as option}
+          <ActionButton
+            selected={option[fieldSchema.fieldName] == value}
+            emphasized 
+            on:click={ () => { value = option[fieldSchema.fieldName] } }
+            > 
+            {option[primaryDisplay]} 
+          </ActionButton>
+        {/each}
+        </ActionGroup>
+    {/if}
+  {/key}
 </div>
