@@ -3,14 +3,26 @@
   "metadata": {},
   "schema": {
     "name": "bb-component-SuperFilter",
-    "friendlyName": "bb-component-SuperFilter",
+    "friendlyName": "Super Data Filter",
     "description": "A Filtering Component for Budibase",
-    "icon": "Text",
+    "icon": "Filter",
     "settings": [
       {
-        "type": "text",
-        "key": "text",
-        "label": "Text"
+        "type": "dataProvider",
+        "key" : "dataProvider",
+        "label" : "Data Provider"
+      },
+      {
+        "type" : "field",
+        "key"  : "field",
+        "label" : "Field"
+      },
+      {
+        "type" : "number",
+        "key"  : "limit",
+        "label": "Max Options",
+        "min" : 2,
+        "defaultValue" : 10
       }
     ]
   }
