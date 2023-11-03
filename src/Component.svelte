@@ -6,33 +6,54 @@
 
   export let dataProvider
   export let field
-  export let mode
   export let limit
 
   const { styleable, ActionTypes, getAction, API } = getContext("sdk")
   const component = getContext("component")
 
-  let value
-  let filters = []
+  let value = null 
+  let reqLimit = limit
 
   let results
   let fieldSchema
   let tableSchema 
-  let primaryDisplay
+  let primaryDisplayField
+  let loaded = false
+  let schemaLoaded = false
 
   const loadTableSchema = async ( tableId ) => {
-        tableSchema = await API.fetchTableDefinition(tableId);
-        primaryDisplay = tableSchema.primaryDisplay
+      tableSchema = await API.fetchTableDefinition(tableId);
+      primaryDisplayField = tableSchema.primaryDisplay
+      schemaLoaded = true
     }
 
-  const loadTable = async ( tableId, limit ) => {
+  const loadTable = async ( tableId, newLimit ) => {
       results = await API.searchTable({
         paginate: false,
         tableId: tableId,
         limit: limit,
         query: { }
       });
+      loaded = true;
     };
+
+  const setFilter = ( newValue ) => {
+    let filterObj = {
+      field: isOptions ? field : fieldSchema.foreignKey,
+      operator: fieldSchema.type == "array" ? "contains" :  "equal",
+      value: newValue,
+      valueType: "Value"
+    }
+
+    const queryExtension = dataFilters.buildLuceneQuery([filterObj])
+    addExtension?.($component.id, queryExtension)
+    value = newValue
+  }
+
+  const clearFilter = ( ) => {
+    removeExtension?.($component.id)
+    value = null
+  }
 
   $: fieldSchema = dataProvider?.schema[field] ?? {}
   $: isOptions = fieldSchema.type == "array" || fieldSchema.type == "options"
@@ -40,8 +61,13 @@
   $: valid = isOptions || isRelationship   
   $: dataProviderId = dataProvider?.id
   $: if ( isRelationship && limit ) {
-    loadTableSchema(fieldSchema.tableId)
-    loadTable(fieldSchema.tableId, limit )
+    if (!loaded) {
+      loadTableSchema(fieldSchema.tableId)
+      loadTable(fieldSchema.tableId, limit )
+    } else if ( limit != reqLimit ) {
+      loadTable(fieldSchema.tableId, limit )
+      reqLimit = limit
+    }
   }
 
   $: addExtension = getAction(
@@ -53,60 +79,42 @@
     dataProviderId,
     ActionTypes.RemoveDataProviderQueryExtension
   )
-
-  $: filterObj = {
-            field: isOptions ? field : fieldSchema.foreignKey,
-            operator: fieldSchema.type == "array" ? "contains" :  "equal",
-            value: value,
-            valueType: "Value",
-          }
-
-  $: {
-    if ( value ) {
-      const queryExtension = dataFilters.buildLuceneQuery([filterObj])
-      addExtension?.($component.id, queryExtension)
-    } else {
-      removeExtension?.($component.id)
-    }
-  }
 </script>
 
 <div use:styleable={$component.styles}>
   {#key limit}
+
     {#if !valid}
       <p> Unsupported Column Type </p>
     {/if}
 
     {#if isOptions}
-        <ActionGroup>
-          <ActionButton selected={ !value } on:click={ () => { value = null } }> ALL </ActionButton>
-          {#each fieldSchema.constraints.inclusion as option, idx}
-            {#if idx < limit}
-              <ActionButton
-                selected={option == value}
-                emphasized
-                on:click={ () => { value = option } }
-                > 
-                {option} 
-              </ActionButton>
-            {/if}
-          {/each}
-        </ActionGroup>
+      <ActionButton selected={ !value } on:click={ clearFilter }> ALL </ActionButton>
+      {#each fieldSchema.constraints.inclusion as option, idx}
+        {#if idx < limit}
+          <ActionButton
+            selected={option == value}
+            emphasized
+            on:click={ () => setFilter ( option ) }
+            > 
+            {option} 
+          </ActionButton>
+        {/if}
+      {/each}
     {/if}
     
-    {#if isRelationship && results?.rows }
-      <ActionGroup>
-        <ActionButton selected={ !value } on:click={ () => { value = null } }> ALL </ActionButton>
-        {#each results?.rows as option}
+    {#if isRelationship && loaded }
+        <ActionButton selected={ !value } on:click={ clearFilter}> ALL </ActionButton>
+        {#each results?.rows as option, idx}
           <ActionButton
             selected={option[fieldSchema.fieldName] == value}
             emphasized 
-            on:click={ () => { value = option[fieldSchema.fieldName] } }
+            on:click={ () => setFilter ( option[fieldSchema.fieldName] ) }
             > 
-            {option[primaryDisplay]} 
+            {option[primaryDisplayField]} 
           </ActionButton>
         {/each}
-        </ActionGroup>
     {/if}
+
   {/key}
 </div>
