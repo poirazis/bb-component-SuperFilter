@@ -15,7 +15,44 @@
       {
         "type" : "field",
         "key"  : "field",
-        "label" : "Field"
+        "label" : "Column",
+        "required": true
+      },
+      {
+        "type" : "select",
+        "key"  : "filterType",
+        "label" : "Filter Type",
+        "options" : [
+          { "label" : "Input" , "value" : "input" },
+          { "label" : "Buttons" , "value" : "buttons" },
+          { "label" : "Checkboxes" , "value" : "checkboxes" },
+          { "label" : "Radio" , "value" : "radio" },
+          { "label" : "Toggle Swithces" , "value" : "toggleSwitch" },
+          { "label" : "Toggle Buttons" , "value" : "toggleButton" }
+        ]
+      },
+      {
+        "type" : "boolean",
+        "key" : "showLabel",
+        "label" : "Show Label",
+        "defaultValue" : true
+      },
+      {
+        "type" : "text",
+        "key" : "label",
+        "label" : "Label",
+        "dependsOn" : "showLabel"
+      },
+      {
+        "type" : "select",
+        "key" : "labelPos",
+        "label" : "Label Position",
+        "dependsOn" : "showLabel",
+        "options" : [
+          {"label" : "Above" , "value" : "above" },
+          {"label" : "Left" , "value" : "left" }
+        ],
+        "defaultValue" : "above"
       },
       {
         "type" : "number",
@@ -23,6 +60,44 @@
         "label": "Max Options",
         "min" : 2,
         "defaultValue" : 10
+      },
+      {
+        "type" : "select",
+        "key" : "optionsSource",
+        "label" : "Options Source",
+        "options" : [
+          { "label" : "Schema", "value": "schema" },
+          { "label" : "Data Provider", "value": "dataprovider" },
+          { "label" : "Custom", "value": "custom" }
+        ]
+      },
+      {
+        "type" : "options",
+        "key" : "options",
+        "resetsOn" : "field",
+        "dependsOn" : { "setting"  : "optionsSource", "value" : "custom" }
+      },
+      {
+        "section" : true,
+        "name" : "Data Provider Settings",
+        "dependsOn" : { "setting" : "optionsSource", "value" : "dataprovider" },
+        "settings" : [
+          {
+            "type" : "dataSource",
+            "key"  : "datasource",
+            "label": "Data Source"
+          },
+          {
+            "type" : "field",
+            "key"  : "labelField",
+            "label": "Label Field"
+          },
+          {
+            "type" : "field",
+            "key"  : "valueField",
+            "label": "Value Field"
+          }
+        ]
       }
     ]
   }
