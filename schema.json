@@ -29,7 +29,9 @@
           { "label" : "Radio" , "value" : "radio" },
           { "label" : "Toggle Swithces" , "value" : "toggleSwitch" },
           { "label" : "Toggle Buttons" , "value" : "toggleButton" }
-        ]
+        ],
+        "defaultValue" : "input",
+        "resetsOn" : "field"
       },
       {
         "type" : "boolean",
@@ -69,7 +71,8 @@
           { "label" : "Schema", "value": "schema" },
           { "label" : "Data Provider", "value": "dataprovider" },
           { "label" : "Custom", "value": "custom" }
-        ]
+        ],
+        "defaultValue" : "schema"
       },
       {
         "type" : "options",
