@@ -2,24 +2,26 @@
   import { getContext } from "svelte";
   import { dataFilters } from "@budibase/shared-core";
   import ActionButton from "../node_modules/@budibase/bbui/src/ActionButton/ActionButton.svelte";
-  import ActionGroup from "../node_modules/@budibase/bbui/src/ActionGroup/ActionGroup.svelte";
-  import SuperCell from "../bb-component-SuperTableCell/lib/SuperTableCell/SuperCell.svelte";
+	import ActionGroup from "../node_modules/@budibase/bbui/src/ActionGroup/ActionGroup.svelte"
+  import SuperCell from "../../bb-component-SuperTableCell/lib/SuperTableCell/SuperCell.svelte";
+
+	const { styleable, ActionTypes, getAction, API } = getContext("sdk");
+  const component = getContext("component");
 
   export let dataProvider;
   export let field;
-  export let filterType = "input";
+  export let filterType
   export let showLabel = true;
   export let label;
   export let labelPos = "above";
-  export let limit;
-  export let optionsSource = "schema";
-  export let options;
-
-  const { styleable, ActionTypes, getAction, API } = getContext("sdk");
-  const component = getContext("component");
+	export let labelWidth = "8rem"
+  export let limit = 10
+  export let optionsSource
+  export let customOptions = []
 
   let value = null;
   let reqLimit = limit;
+	let options 
 
   let results;
   let fieldSchema;
@@ -29,12 +31,12 @@
   let schemaLoaded = false;
   let cellState;
 
-  const getOperator = ( type ) => {
-    if ( type == "string") return "fuzzy"
-    if ( type == "array") return "contains"
-    if ( type == "options") return "equal"
-    if ( type == "link") return "equal"
-  }
+  const getOperator = (type) => {
+    if (type == "string") return "fuzzy";
+    if (type == "array") return "contains";
+    if (type == "options") return "equal";
+    if (type == "link") return "equal";
+  };
 
   const loadTableSchema = async (tableId) => {
     tableSchema = await API.fetchTableDefinition(tableId);
@@ -49,19 +51,20 @@
       limit: limit,
       query: {},
     });
+	  options = results.rows.map( (r) => { return { label: r[tableSchema.primaryDisplay], value: fieldSchema.foreignKey ?? r["_id"]} })
     loaded = true;
   };
 
   const setFilter = (newValue) => {
-    if ( !newValue || newValue == "" ) {
-      console.log("Clearing")
+    if (!newValue || newValue == "") {
+      console.log("Clearing");
       clearFilter();
-      return
+      return;
     }
 
     let filterObj = {
-      field: isRelationship ? fieldSchema.foreignKey : field,
-      operator: getOperator (fieldSchema.type),
+      field: fieldSchema.type == "link" ? fieldSchema.foreignKey : field,
+      operator: getOperator(fieldSchema.type),
       value: fieldSchema.type == "options" ? newValue[0] : newValue,
       valueType: "Value",
     };
@@ -76,20 +79,23 @@
     value = null;
   };
 
+	const initializeOptions = () => {
+		options = []
+		if ( filterType == "input" ) return;
+
+		if ( optionsSource == "custom" ) 
+			options = customOptions
+		else if ( ["array", "options", "link"].includes(fieldSchema?.type) ) {
+			if ( fieldSchema.type == "link" ) {
+				loadTableSchema( fieldSchema.tableId)
+				loadTable(fieldSchema.tableId, limit)
+			} else 
+				options = fieldSchema?.constraints?.inclusion.map( ( x ) => { return { label:x, value: x } })
+		}	
+	}
+
   $: fieldSchema = dataProvider?.schema[field] ?? {};
-  $: isOptions = fieldSchema.type == "array" || fieldSchema.type == "options";
-  $: isRelationship = fieldSchema.type == "link";
-  $: valid = isOptions || isRelationship || optionsSource == "custom";
   $: dataProviderId = dataProvider?.id;
-  $: if (isRelationship && limit) {
-    if (!loaded) {
-      loadTableSchema(fieldSchema.tableId);
-      loadTable(fieldSchema.tableId, limit);
-    } else if (limit != reqLimit) {
-      loadTable(fieldSchema.tableId, limit);
-      reqLimit = limit;
-    }
-  }
 
   $: addExtension = getAction(
     dataProviderId,
@@ -101,189 +107,103 @@
     ActionTypes.RemoveDataProviderQueryExtension
   );
 
+	$: initializeOptions( filterType, field, optionsSource, limit )
+
   $: $component.styles = {
     ...$component.styles,
     normal: {
       ...$component.styles.normal,
-      display: "flex",
-      "flex-direction": labelPos == "above" ? "column" : "row",
-      "justify-content": "flex-start",
-      gap: "0.5rem",
-      "--label-max-width": labelPos == "left" ? "8rem" : "auto",
+			"min-height" : "2rem",
+      "display": "flex",
+      "flex-direction": labelPos == "above" && showLabel ? "column" : "row",
+      "align-items": labelPos == "above" && showLabel ? "stretch" : "center",
+      "gap": labelPos == "above" ? "0.25rem" : "0.85rem",
+      "--label-width": labelPos == "left" ? labelWidth ?? "8rem" : "auto",
+			"min-width" : 0,
     },
   };
+
 </script>
 
 <div use:styleable={$component.styles}>
   {#if showLabel}
-    <div
-      class="fieldLabel"
-      style:color={value ? "#378ef0" : "var(--spectrum-global-color-gray-600)"}
-      style:font-weight={value ? 600 : 500 }
-    >
-      <div class="icon" style:color={value ? "#378ef0" : "var(--spectrum-global-color-gray-500)"}>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.25"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          class="lucide lucide-search"
-          ><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg
-        >
-      </div>
-      {label?.toUpperCase() || field?.toUpperCase()}
+    <div class="fieldLabel">
+      {label || field.toUpperCase() }
     </div>
   {/if}
 
-  {#if filterType == "input"}
+  {#if filterType == "input" }
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div class="inputWrapper" on:click={cellState.focus}>
-      {#if !showLabel}
-        <div
-          class="icon"
-          style:color={value
-            ? "#378ef0"
-            : "var(--spectrum-global-color-gray-500)"}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.25"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="lucide lucide-search"
-            ><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg
-          >
-        </div>
-      {/if}
-
       <SuperCell
         bind:cellState
-        cellOptions={{ padding: "0.5rem" }}
+        cellOptions={{
+          padding: "0.5rem",
+          clearValueIcon: true,
+          iconFront: "ri-search-line",
+          placeholder: "Search " + field,
+          debounce: 500,
+        }}
         multi={false}
+        initialState={"Editing"}
+        lockState
         {value}
         {fieldSchema}
         editable={true}
         on:change={(e) => setFilter(e.detail)}
       />
-
-      {#if value}
-      <div
-        on:click={clearFilter}
-        class="icon"
-        style:color={value
-          ? "var(--spectrum-global-color-red-500)"
-          : "var(--spectrum-global-color-gray-700)"}
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.25"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          class="lucide lucide-x"
-          ><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg
-        >
-      </div>
-      {/if}
     </div>
   {/if}
+	
 
-  {#if filterType == "buttons"}
-    {#key limit}
-      <ActionGroup>
-        {#if optionsSource == "schema" && isOptions}
-          <ActionButton selected={!value} on:click={clearFilter}>
-            ALL
-          </ActionButton>
-          {#each fieldSchema.constraints.inclusion as option, idx}
-            {#if idx < limit}
-              <ActionButton
-                selected={option == value}
-                emphasized
-                on:click={() => setFilter(option)}
-              >
-                {option}
-              </ActionButton>
-            {/if}
-          {/each}
-        {/if}
-
-        {#if optionsSource == "schema" && isRelationship && loaded}
-          <ActionButton selected={!value} on:click={clearFilter}>
-            ALL
-          </ActionButton>
-          {#each results?.rows as option, idx}
-            <ActionButton
-              selected={option[fieldSchema.fieldName] == value}
-              emphasized
-              on:click={() => setFilter(option[fieldSchema.fieldName])}
-            >
-              {option[primaryDisplayField]}
-            </ActionButton>
-          {/each}
-        {/if}
-
-        {#if optionsSource == "custom" && options}
-          <ActionButton selected={!value} on:click={clearFilter}>
-            ALL
-          </ActionButton>
-          {#each options as option, idx}
-            <ActionButton
-              selected={option.value == value}
-              emphasized
-              on:click={() => setFilter(option.value)}
-            >
-              {option.label}
-            </ActionButton>
-          {/each}
-        {/if}
-      </ActionGroup>
-    {/key}
+  {#if filterType == "options"}
+		<ActionGroup compact quiet>
+			<ActionButton size="S" quiet selected={!value} on:click={clearFilter}>
+				<svg xmlns="http://www.w3.org/2000/svg" 
+					width="14" height="14" viewBox="0 0 24 24" 
+					fill="none" stroke={ value ? "var(--spectrum-global-color-blue-500)" : "var(--spectrum-global-color-gray-500)"} stroke-width="2" stroke-linecap="round" 
+					stroke-linejoin="round" class="lucide lucide-circle-off">
+					<path d="m2 2 20 20"/><path d="M8.35 2.69A10 10 0 0 1 21.3 15.65"/><path d="M19.08 19.08A10 10 0 1 1 4.92 4.92"/>
+				</svg>			
+			</ActionButton>
+			{#if options?.length}
+				{#each options as option, idx}
+					{#if idx <= limit}
+						<ActionButton
+							selected={option.value == value}
+							quiet
+							fullwidth
+							size="S"
+							on:click={() => setFilter(option.value)}
+						>
+							{option.label}
+						</ActionButton>
+					{/if}
+				{/each}
+			{/if}
+		</ActionGroup>
   {/if}
+
 </div>
 
 <style>
   .inputWrapper {
-    flex: 1;
-    min-width: 200px;
-    min-height: 2rem;
+    min-width: 180px;
+    height: 2rem;
+    width: 100%;
     display: flex;
     justify-items: stretch;
     align-items: stretch;
-    gap: 0.5rem;
+    gap: 0.85rem;
   }
-
-  .icon {
-    display: flex;
-    align-items: center;
-  }
-
   .fieldLabel {
-    min-width: 5rem;
-    max-width: var(--label-max-width);
-    display: flex;
+		width: var(--label-width);
     font-size: 14px;
     align-items: center;
-    line-height: 2rem;
+    line-height: 1.75rem;
     font-weight: 500;
-    transition: all 1300ms;
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
-    gap: 0.5rem;
   }
 </style>
