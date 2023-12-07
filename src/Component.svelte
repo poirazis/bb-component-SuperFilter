@@ -3,7 +3,7 @@
   import { dataFilters } from "@budibase/shared-core";
   import ActionButton from "../node_modules/@budibase/bbui/src/ActionButton/ActionButton.svelte";
 	import ActionGroup from "../node_modules/@budibase/bbui/src/ActionGroup/ActionGroup.svelte"
-  import SuperCell from "../bb_super_components_shared/src/lib/SuperCell/SuperCell.svelte"
+  import { SuperCell } from "../bb_super_components_shared/src/lib/";
 
 	const { styleable, ActionTypes, getAction, API } = getContext("sdk");
   const component = getContext("component");
@@ -123,8 +123,6 @@
 			"min-width" : 0,
     },
   };
-
-  $: console.log(fieldSchema)
 </script>
 
 <div use:styleable={$component.styles}>
