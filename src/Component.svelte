@@ -89,8 +89,9 @@
 			if ( fieldSchema.type == "link" ) {
 				loadTableSchema( fieldSchema.tableId)
 				loadTable(fieldSchema.tableId, limit)
-			} else 
+			} else {
 				options = fieldSchema?.constraints?.inclusion.map( ( x ) => { return { label:x, value: x } })
+      }
 		}	
 	}
 
@@ -123,6 +124,7 @@
     },
   };
 
+  $: console.log(fieldSchema)
 </script>
 
 <div use:styleable={$component.styles}>
@@ -176,7 +178,7 @@
 							size="S"
 							on:click={() => setFilter(option.value)}
 						>
-							{option.label}
+              {option.label}
 						</ActionButton>
 					{/if}
 				{/each}
