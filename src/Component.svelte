@@ -114,11 +114,11 @@
     ...$component.styles,
     normal: {
       ...$component.styles.normal,
-			"min-height" : "2rem",
       "display": "flex",
+      "max-height" : showLabel && labelPos == "above" ? "4rem" : "2rem",
       "flex-direction": labelPos == "above" && showLabel ? "column" : "row",
       "align-items": labelPos == "above" && showLabel ? "stretch" : "center",
-      "gap": labelPos == "above" ? "0.25rem" : "0.85rem",
+      "gap": labelPos == "above" && showLabel ? "0.25rem" : "0.85rem",
       "--label-width": labelPos == "left" ? labelWidth ?? "8rem" : "auto",
 			"min-width" : 0,
     },
@@ -198,10 +198,9 @@
   }
   .fieldLabel {
 		width: var(--label-width);
-    font-size: 14px;
+    font-size: 12px;
     align-items: center;
     line-height: 1.75rem;
-    font-weight: 500;
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
