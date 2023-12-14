@@ -56,6 +56,8 @@
   };
 
   const setFilter = (newValue) => {
+    console.log(newValue)
+
     if (!newValue || newValue == "") {
       console.log("Clearing");
       clearFilter();
@@ -65,7 +67,7 @@
     let filterObj = {
       field: fieldSchema.type == "link" ? fieldSchema.foreignKey : field,
       operator: getOperator(fieldSchema.type),
-      value: fieldSchema.type == "options" ? newValue[0] : newValue,
+      value: newValue,
       valueType: "Value",
     };
 
@@ -158,7 +160,7 @@
 
   {#if filterType == "options"}
 		<ActionGroup compact quiet>
-			<ActionButton size="S" quiet selected={!value} on:click={clearFilter}>
+			<ActionButton size="M" quiet selected={!value} on:click={clearFilter}>
 				<svg xmlns="http://www.w3.org/2000/svg" 
 					width="14" height="14" viewBox="0 0 24 24" 
 					fill="none" stroke={ value ? "var(--spectrum-global-color-blue-500)" : "var(--spectrum-global-color-gray-500)"} stroke-width="2" stroke-linecap="round" 
@@ -173,7 +175,7 @@
 							selected={option.value == value}
 							quiet
 							fullwidth
-							size="S"
+							size="M"
 							on:click={() => setFilter(option.value)}
 						>
               {option.label}
