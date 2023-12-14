@@ -3,7 +3,7 @@
   import { dataFilters } from "@budibase/shared-core";
   import ActionButton from "../node_modules/@budibase/bbui/src/ActionButton/ActionButton.svelte";
 	import ActionGroup from "../node_modules/@budibase/bbui/src/ActionGroup/ActionGroup.svelte"
-  import { SuperCell } from "../bb_super_components_shared/src/lib/";
+  import { SuperCell } from "../../bb_super_components_shared/src/lib/";
 
 	const { styleable, ActionTypes, getAction, API } = getContext("sdk");
   const component = getContext("component");
@@ -56,6 +56,8 @@
   };
 
   const setFilter = (newValue) => {
+    console.log(newValue)
+
     if (!newValue || newValue == "") {
       console.log("Clearing");
       clearFilter();
@@ -65,7 +67,7 @@
     let filterObj = {
       field: fieldSchema.type == "link" ? fieldSchema.foreignKey : field,
       operator: getOperator(fieldSchema.type),
-      value: fieldSchema.type == "options" ? newValue[0] : newValue,
+      value: newValue,
       valueType: "Value",
     };
 
@@ -114,11 +116,11 @@
     ...$component.styles,
     normal: {
       ...$component.styles.normal,
-			"min-height" : "2rem",
       "display": "flex",
+      "max-height" : showLabel && labelPos == "above" ? "4rem" : "2rem",
       "flex-direction": labelPos == "above" && showLabel ? "column" : "row",
       "align-items": labelPos == "above" && showLabel ? "stretch" : "center",
-      "gap": labelPos == "above" ? "0.25rem" : "0.85rem",
+      "gap": labelPos == "above" && showLabel ? "0.25rem" : "0.85rem",
       "--label-width": labelPos == "left" ? labelWidth ?? "8rem" : "auto",
 			"min-width" : 0,
     },
@@ -158,7 +160,7 @@
 
   {#if filterType == "options"}
 		<ActionGroup compact quiet>
-			<ActionButton size="S" quiet selected={!value} on:click={clearFilter}>
+			<ActionButton size="M" quiet selected={!value} on:click={clearFilter}>
 				<svg xmlns="http://www.w3.org/2000/svg" 
 					width="14" height="14" viewBox="0 0 24 24" 
 					fill="none" stroke={ value ? "var(--spectrum-global-color-blue-500)" : "var(--spectrum-global-color-gray-500)"} stroke-width="2" stroke-linecap="round" 
@@ -173,7 +175,7 @@
 							selected={option.value == value}
 							quiet
 							fullwidth
-							size="S"
+							size="M"
 							on:click={() => setFilter(option.value)}
 						>
               {option.label}
@@ -198,10 +200,9 @@
   }
   .fieldLabel {
 		width: var(--label-width);
-    font-size: 14px;
+    font-size: 12px;
     align-items: center;
     line-height: 1.75rem;
-    font-weight: 500;
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
