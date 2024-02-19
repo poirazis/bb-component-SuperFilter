@@ -3,7 +3,7 @@
   import { dataFilters } from "@budibase/shared-core";
   import ActionButton from "../node_modules/@budibase/bbui/src/ActionButton/ActionButton.svelte";
 	import ActionGroup from "../node_modules/@budibase/bbui/src/ActionGroup/ActionGroup.svelte"
-  import { SuperCell } from "../../bb_super_components_shared/src/lib/";
+  import CellString from "../../bb_super_components_shared/src/lib/SuperCells/CellString.svelte";
 
 	const { styleable, ActionTypes, getAction, API } = getContext("sdk");
   const component = getContext("component");
@@ -137,7 +137,7 @@
   {#if filterType == "input" }
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div class="inputWrapper" on:click={cellState.focus}>
-      <SuperCell
+      <CellString
         bind:cellState
         cellOptions={{
           padding: "0.5rem",
